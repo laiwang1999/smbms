@@ -2,10 +2,14 @@ package com.yang.servlet.user;
 
 import com.alibaba.fastjson.JSONArray;
 import com.mysql.cj.util.StringUtils;
+import com.yang.pojo.Role;
 import com.yang.pojo.User;
+import com.yang.service.role.RoleService;
+import com.yang.service.role.RoleServiceImpl;
 import com.yang.service.user.UserService;
 import com.yang.service.user.UserServiceImpl;
 import com.yang.utils.Constants;
+import com.yang.utils.PageSupport;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -14,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 
 //实现servlet复用
 public class UserServlet extends HttpServlet {
@@ -25,6 +30,8 @@ public class UserServlet extends HttpServlet {
             this.updatePwd(req, resp);
         } else if (method.equals("pwdmodify")) {
             this.pwdModify(req, resp);
+        } else if (method.equals("query")) {
+            this.query(req, resp);
         }
     }
 
@@ -94,5 +101,80 @@ public class UserServlet extends HttpServlet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void query(HttpServletRequest req, HttpServletResponse resp) {
+        /*
+        查询用户列表
+         */
+//        从前端获取数据
+        String queryUserName = req.getParameter("queryname");
+        String tmp = req.getParameter("queryUserRole");
+        String pageIndex = req.getParameter("pageIndex");
+        //获取用户列表
+        UserService userService = new UserServiceImpl();
+        RoleService roleService = new RoleServiceImpl();
+        List<User> userList = null;
+        List<Role> roleList = null;
+        //第一次走这个请求一定是第一页，页面大小固定
+        int pageSize = 5;//可以把这个写到配置文件，方便后期维护
+        int currentPageNo = 1;
+        int queryUserRole = 0;
+        if (queryUserName == null) {
+            queryUserName = "";
+        }
+        if (tmp != null && !tmp.equals("")) {
+            queryUserRole = Integer.parseInt(tmp);//给查询赋值 0,1,2,3
+        }
+        if (pageIndex != null) {
+            try {
+                currentPageNo = Integer.parseInt(pageIndex);
+            } catch (NumberFormatException e) {
+                try {
+                    resp.sendRedirect("error.jsp");
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        }
+        //获取用户的总数(分页：上一页，下一页)
+        int totalCount = userService.getUserCount(queryUserName, queryUserRole);
+        //总页数支持
+        PageSupport pageSupport = new PageSupport();
+        pageSupport.setCurrentPageNo(currentPageNo);
+        pageSupport.setPageSize(pageSize);
+        pageSupport.setTotalCount(totalCount);
+
+        int totalPageCount = pageSupport.getTotalPageCount();
+
+        //控制首页和尾页
+        if(totalCount<1){
+            currentPageNo=1;
+        }else if(currentPageNo>totalPageCount){
+            currentPageNo=totalPageCount;
+        }
+        //获取用户列表展示
+        System.out.println(queryUserName+" "+queryUserRole);
+        userList = userService.getUserList(queryUserName, queryUserRole, currentPageNo, pageSize);
+        roleList = roleService.getRoleList();
+        System.out.println("totalCount:"+totalCount);
+        System.out.println("currentPageNo:"+currentPageNo);
+        System.out.println("pageSize:"+pageSize);
+        System.out.println("totalPageCount:"+totalPageCount);
+        req.setAttribute("userList",userList);
+        req.setAttribute("roleList",roleList);
+        req.setAttribute("totalCount",totalCount);
+        req.setAttribute("currentPageNo",currentPageNo);
+        req.setAttribute("totalPageCount",totalPageCount);
+        for (User user : userList) {
+            System.out.println(user.getUserCode());
+        }
+        //返回前端
+        try {
+            req.getRequestDispatcher("userlist.jsp").forward(req,resp);
+        } catch (ServletException | IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

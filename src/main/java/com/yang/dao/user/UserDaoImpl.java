@@ -100,10 +100,9 @@ public class UserDaoImpl implements UserDao {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
         List<User> userList = new ArrayList<User>();
-        int count = 0;
         if (connection != null) {
             StringBuffer sql = new StringBuffer();
-            sql.append("select count(1) as count from smbms_user u, smbms_role r where u.userRole = r.id");
+            sql.append("select u.*,r.roleName from smbms_user u, smbms_role r where u.userRole = r.id");
             ArrayList<Object> list = new ArrayList<>();//存放我们的参数
             if (!StringUtils.isNullOrEmpty(username)) {
                 sql.append(" and u.username like ?");
@@ -114,13 +113,14 @@ public class UserDaoImpl implements UserDao {
                 list.add(userRole);
             }
             //在数据库中，分页使用limit start
-            sql.append(" order by creationDate DESC limit ?,?");
+            sql.append(" order by u.creationDate DESC limit ?,?");
             currentPageNo = (currentPageNo - 1) * pageSize;
             list.add(currentPageNo);
             list.add(pageSize);
             //怎么把list转换成数组
             Object[] params = list.toArray();
             rs = BaseDao.execute(connection, preparedStatement, rs, sql.toString(), params);
+            System.out.println(rs.toString());
             if (rs.next()) {
                 User _user = new User();
                 _user.setId(rs.getInt("id"));
@@ -130,7 +130,8 @@ public class UserDaoImpl implements UserDao {
                 _user.setBirthday(rs.getDate("birthday"));
                 _user.setPhone(rs.getString("phone"));
                 _user.setUserRole(rs.getInt("userRole"));
-                _user.setUserName(rs.getString("userRoleName"));
+                _user.setUserRoleName(rs.getString("roleName"));
+
                 userList.add(_user);
             }
             BaseDao.closeResource(null, preparedStatement, rs);

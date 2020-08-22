@@ -72,8 +72,8 @@ public class UserServiceImpl implements UserService {
         try {
             connection = BaseDao.getConnection();
             userList = userDao.getUserList(connection, queryUserName, queryUserRole, currentPage, pageSize);
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
             BaseDao.closeResource(connection, null, null);
         }

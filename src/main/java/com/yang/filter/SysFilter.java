@@ -20,10 +20,8 @@ public class SysFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
 
         User user = (User) req.getSession().getAttribute(Constants.USER_SESSION);
-        System.out.println("userSession : "+user);
         if (user == null) {
 //            已经被移除或注销
-            System.out.println(req.getContextPath());
             resp.sendRedirect(req.getContextPath()+"/error.jsp");
         }
         filterChain.doFilter(servletRequest, servletResponse);
