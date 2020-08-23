@@ -74,7 +74,7 @@ public class UserDaoImpl implements UserDao {
         if (connection != null) {
             StringBuffer sql = new StringBuffer();
             sql.append("select count(1) as count from smbms_user u, smbms_role r where u.userRole = r.id");
-            ArrayList<Object> list = new ArrayList<>();//存放我们的参数
+            ArrayList<Object> list = new ArrayList<Object>();//存放我们的参数
             if (!StringUtils.isNullOrEmpty(username)) {
                 sql.append(" and u.username like ?");
                 list.add("%" + username + "%");//index:0
@@ -87,7 +87,7 @@ public class UserDaoImpl implements UserDao {
             Object[] params = list.toArray();
             System.out.println("UserDaoImpl->getUserCount:" + sql.toString());//输出完成的sql语句
             rs = BaseDao.execute(connection, preparedStatement, rs, sql.toString(), params);
-            if (rs.next()) {
+            while (rs.next()) {
                 count = rs.getInt("count");
             }
             BaseDao.closeResource(null, preparedStatement, rs);
@@ -121,7 +121,7 @@ public class UserDaoImpl implements UserDao {
             Object[] params = list.toArray();
             rs = BaseDao.execute(connection, preparedStatement, rs, sql.toString(), params);
             System.out.println(rs.toString());
-            if (rs.next()) {
+            while (rs.next()) {
                 User _user = new User();
                 _user.setId(rs.getInt("id"));
                 _user.setUserCode(rs.getString("userCode"));
