@@ -2,7 +2,6 @@ package com.yang.dao.user;
 
 import com.mysql.cj.util.StringUtils;
 import com.yang.dao.BaseDao;
-import com.yang.pojo.Role;
 import com.yang.pojo.User;
 
 import java.sql.Connection;
@@ -139,6 +138,21 @@ public class UserDaoImpl implements UserDao {
         return userList;
     }
 
-    //获取角色列表
-
+    @Override
+    public int add(Connection connection, User user) throws SQLException {
+        PreparedStatement preparedStatement = null;
+        int updateRows = 0;
+        if (connection != null) {
+            String sql = "insert into smbms_user (userCode, userName, userPassword, " +
+                    "userRole, gender, birthday, phone, address, creationDate,\n" +
+                    "                        createdBy)\n" +
+                    "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+            Object[] params = {user.getUserCode(), user.getUserName(), user.getUserPassword(),
+                    user.getUserRole(), user.getGender(), user.getBirthday(), user.getPhone(),
+                    user.getAddress(), user.getCreationDate(), user.getCreatedBy()};
+            updateRows = BaseDao.execute(connection, preparedStatement, sql, params);
+            BaseDao.closeResource(null, preparedStatement, null);
+        }
+        return updateRows;
+    }
 }

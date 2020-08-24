@@ -80,6 +80,35 @@ public class UserServiceImpl implements UserService {
         return userList;
     }
 
+    @Override
+    public boolean add(User user) {
+        boolean flag = false;
+        Connection connection = null;
+        try {
+            connection = BaseDao.getConnection();
+            connection.setAutoCommit(false);
+            int updateRows = userDao.add(connection,user);
+            connection.commit();
+            if(updateRows>0){
+                flag=true;
+                System.out.println("add success!!");
+            }else{
+                System.out.println("add failed!!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("rollback-----------------");
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        }finally {
+            BaseDao.closeResource(connection,null,null);
+        }
+        return flag;
+    }
+
     @Test
     public void test() {
         UserServiceImpl userService = new UserServiceImpl();
