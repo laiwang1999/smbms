@@ -17,6 +17,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +35,8 @@ public class UserServlet extends HttpServlet {
             this.pwdModify(req, resp);
         } else if (method.equals("query")) {
             this.query(req, resp);
+        } else if (method.equals("add")) {
+            this.add(req, resp);
         }
     }
 
@@ -148,33 +153,69 @@ public class UserServlet extends HttpServlet {
         int totalPageCount = pageSupport.getTotalPageCount();
 
         //控制首页和尾页
-        if(totalCount<1){
-            currentPageNo=1;
-        }else if(currentPageNo>totalPageCount){
-            currentPageNo=totalPageCount;
+        if (totalCount < 1) {
+            currentPageNo = 1;
+        } else if (currentPageNo > totalPageCount) {
+            currentPageNo = totalPageCount;
         }
         //获取用户列表展示
-        System.out.println(queryUserName+" "+queryUserRole);
+        System.out.println(queryUserName + " " + queryUserRole);
         userList = userService.getUserList(queryUserName, queryUserRole, currentPageNo, pageSize);
         roleList = roleService.getRoleList();
-        System.out.println("totalCount:"+totalCount);
-        System.out.println("currentPageNo:"+currentPageNo);
-        System.out.println("pageSize:"+pageSize);
-        System.out.println("totalPageCount:"+totalPageCount);
-        req.setAttribute("userList",userList);
-        req.setAttribute("roleList",roleList);
-        req.setAttribute("totalCount",totalCount);
-        req.setAttribute("currentPageNo",currentPageNo);
-        req.setAttribute("totalPageCount",totalPageCount);
+        System.out.println("totalCount:" + totalCount);
+        System.out.println("currentPageNo:" + currentPageNo);
+        System.out.println("pageSize:" + pageSize);
+        System.out.println("totalPageCount:" + totalPageCount);
+        req.setAttribute("userList", userList);
+        req.setAttribute("roleList", roleList);
+        req.setAttribute("totalCount", totalCount);
+        req.setAttribute("currentPageNo", currentPageNo);
+        req.setAttribute("totalPageCount", totalPageCount);
         for (User user : userList) {
             System.out.println(user.getUserCode());
         }
         //返回前端
         try {
-            req.getRequestDispatcher("userlist.jsp").forward(req,resp);
+            req.getRequestDispatcher("userlist.jsp").forward(req, resp);
         } catch (ServletException | IOException e) {
             e.printStackTrace();
         }
 
     }
+
+    public void add(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        System.out.println("add .....................");
+        String userCode = req.getParameter("userCode");
+        String userName = req.getParameter("userName");
+        String userPassword = req.getParameter("userPassword");
+        String gender = req.getParameter("gender");
+        String birthday = req.getParameter("birthday");
+        String phone = req.getParameter("phone");
+        String address = req.getParameter("address");
+        String userRole = req.getParameter("userRole");
+
+        User user = new User();
+        user.setUserCode(userCode);
+        user.setUserName(userName);
+        user.setUserPassword(userPassword);
+        user.setGender(Integer.parseInt(gender));
+        try {
+            user.setBirthday(new SimpleDateFormat("yyyy-MM-dd").parse(birthday));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setUserRole(Integer.parseInt(userRole));
+        user.setCreationDate(new Date());
+        user.setCreatedBy(((User)req.getSession().getAttribute(Constants.USER_SESSION)).getId());
+        UserService userService = new UserServiceImpl();
+        if(userService.add(user)){
+            resp.sendRedirect(req.getContextPath()+"/jsp/user.do?method=query");
+        }else{
+            req.getRequestDispatcher("useradd.jsp").forward(req,resp);
+        }
+
+    }
+
 }
